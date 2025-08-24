@@ -1,0 +1,9 @@
+USER PROMPT 034:
+Date: 2025-08-24
+Request: Also, please add the created_by_user field to the backend response so it can show the user name of who created that feature request
+
+CONTEXT: User wants the backend to properly populate the created_by_user field in the API response so the Android app can display the username of who created each feature instead of showing "null" or "Unknown"
+
+RESOLUTION NEEDED: Check backend API response and ensure the created_by_user field is properly populated with the username from the users table via the LEFT JOIN
+
+STATUS: Need to fix backend to return proper username in created_by_user field

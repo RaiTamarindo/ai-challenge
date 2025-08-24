@@ -10,7 +10,7 @@ type Feature struct {
 	Title           string    `json:"title"`
 	Description     string    `json:"description"`
 	CreatedBy       int       `json:"created_by"`
-	CreatedByUser   string    `json:"created_by_username,omitempty"`
+	CreatedByUser   *string   `json:"created_by_user,omitempty"`
 	VoteCount       int       `json:"vote_count"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`

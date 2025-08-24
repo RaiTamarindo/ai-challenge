@@ -103,9 +103,6 @@ rebuild: ## Force rebuild all images and restart services
 
 # API management
 api: ## Start API service
-	docker-compose up -d api
-
-api-build: ## Build and start API service (forces rebuild)
 	docker-compose build --no-cache api
 	docker-compose up -d api
 
@@ -117,8 +114,6 @@ api-logs: ## Show API logs
 
 # Development workflow
 up: infra api ## Start complete development environment (database + API)
-
-up-build: infra api-build ## Start development environment with forced rebuild
 
 down: ## Stop complete development environment
 	docker-compose down

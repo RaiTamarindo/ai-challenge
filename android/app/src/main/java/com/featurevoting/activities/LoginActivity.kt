@@ -44,10 +44,6 @@ class LoginActivity : AppCompatActivity() {
             hideKeyboard()
             performLogin()
         }
-        
-        // Pre-fill for testing (remove in production)
-        binding.etEmail.setText("admin@example.com")
-        binding.etPassword.setText("admin123")
     }
     
     private fun performLogin() {

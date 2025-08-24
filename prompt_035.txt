@@ -1,0 +1,9 @@
+USER PROMPT 035:
+Date: 2025-08-24
+Request: On the login page, is that possible to not have the fields pre-filled but a placeholder instead?
+
+CONTEXT: User wants to change the login page from having pre-filled values (admin@example.com / admin123) to using placeholder text instead for better UX
+
+RESOLUTION NEEDED: Update LoginActivity to remove pre-filled text and add placeholder hints to the email and password fields
+
+STATUS: Need to modify Android login page UI behavior

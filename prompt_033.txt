@@ -1,0 +1,12 @@
+USER PROMPT 033:
+Date: 2025-08-24
+Request: Make the UI show the features sorted by vote_count, make updates on the backend to achieve that if needed
+
+CONTEXT: User wants features to be displayed sorted by vote count (most voted features first) in the Android app. This may require updating the backend API to return features sorted by vote_count DESC.
+
+RESOLUTION NEEDED:
+1. Check current backend feature listing endpoint sorting
+2. Update backend to sort features by vote_count DESC 
+3. Ensure Android app displays features in the sorted order from backend
+
+STATUS: Need to implement vote-based sorting in both backend and frontend

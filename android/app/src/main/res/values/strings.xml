@@ -4,8 +4,8 @@
     
     <!-- Login Screen -->
     <string name="login_title">Feature Voting Platform</string>
-    <string name="email_hint">Email</string>
-    <string name="password_hint">Password</string>
+    <string name="email_hint">Enter your email</string>
+    <string name="password_hint">Enter your password</string>
     <string name="login_button">Login</string>
     <string name="login_error">Invalid credentials</string>
     <string name="login_loading">Logging in...</string>

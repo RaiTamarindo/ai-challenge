@@ -86,13 +86,13 @@ func (r *FeatureRepository) GetAll(page, perPage int, userID *int) ([]features.F
 		return nil, 0, fmt.Errorf("failed to get features count: %w", err)
 	}
 	
-	// Get features with pagination
+	// Get features with pagination, sorted by vote count (most voted first)
 	query := `
 		SELECT f.id, f.title, f.description, f.created_by, u.username,
 		       f.vote_count, f.created_at, f.updated_at
 		FROM features f
 		LEFT JOIN users u ON f.created_by = u.id
-		ORDER BY f.created_at DESC
+		ORDER BY f.vote_count DESC, f.created_at DESC
 		LIMIT $1 OFFSET $2
 	`
 	
