@@ -9,13 +9,13 @@ RUN apk add --no-cache git ca-certificates
 # Set working directory
 WORKDIR /app
 
-# Copy go modules files
+# Copy go modules files first (for better caching)
 COPY backend/go.mod backend/go.sum ./
 
-# Download dependencies
+# Download dependencies (this layer will be cached unless go.mod/go.sum changes)
 RUN go mod download
 
-# Copy source code
+# Copy source code (this will invalidate cache when code changes)
 COPY backend/ ./
 
 # Build binaries

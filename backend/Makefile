@@ -65,6 +65,10 @@ migrate-up:
 migrate-down:
 	migrate -path migrations -database "$(DATABASE_URL)" down
 
+# Create new migration
+migration:
+	migrate create -ext sql -dir migrations -seq $(name)
+
 # Generate mocks using mockery
 generate-mocks:
 	@echo "Generating mocks..."

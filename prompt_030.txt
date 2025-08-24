@@ -1,0 +1,9 @@
+USER PROMPT 030:
+Date: 2025-08-24
+Request: please use make migration command instead, it will create a migration template file, update that file, it contains the up and down sections on a same file
+
+CONTEXT: User wants me to use the proper make migration command to generate a migration template with both up and down sections in a single file, rather than creating separate .up.sql and .down.sql files
+
+RESOLUTION NEEDED: Use the make migration command to generate proper migration template and update it with the vote count fix logic
+
+STATUS: Need to use proper migration tooling to create the migration

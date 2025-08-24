@@ -1,0 +1,21 @@
+USER PROMPT 031:
+Date: 2025-08-24
+Request: Let me update you about the UI issues:
+- Plus (+) button that creates new feature requests seems disabled, but it works
+- All features shows as Created by: null
+- When voting a feature, UI doesn't updates the votes count, it only updates when loading all features
+- When voting a feature, the error alert is now: Network error: Parameter specified as non-null is null: method com.feature... (maybe would be good to log that error instead of showing it in the UI)
+
+CONTEXT: After migration fixes, user identified several UI issues in the Android app:
+1. FAB button appears disabled but functions
+2. Created by field showing null instead of usernames
+3. Vote counts not updating in real-time after voting
+4. Kotlin null parameter error being shown to users instead of proper error handling
+
+RESOLUTION NEEDED:
+1. Fix FAB visual appearance
+2. Fix created_by_user field mapping/display
+3. Improve real-time vote count updates after voting
+4. Better error handling to log technical errors and show user-friendly messages
+
+STATUS: Multiple Android UI/UX issues to address

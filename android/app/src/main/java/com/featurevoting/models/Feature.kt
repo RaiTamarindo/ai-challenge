@@ -16,7 +16,7 @@ data class Feature(
     val createdBy: Int,
     
     @SerializedName("created_by_user")
-    val createdByUser: String,
+    val createdByUser: String?,
     
     @SerializedName("vote_count")
     val voteCount: Int,

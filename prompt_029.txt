@@ -1,0 +1,9 @@
+USER PROMPT 029:
+Date: 2025-08-24
+Request: Please also create a database migration to fix the vote_count column from existing features in the database by looking to the votes table
+
+CONTEXT: After fixing the backend vote operations to update vote_count, existing features in the database still have incorrect vote_count values (likely 0) that need to be corrected based on actual vote data in the votes table
+
+RESOLUTION NEEDED: Create a database migration script to recalculate and update vote_count for all existing features based on actual votes in the votes table
+
+STATUS: Need to create migration to fix existing data consistency

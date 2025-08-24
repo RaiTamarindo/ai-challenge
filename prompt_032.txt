@@ -1,0 +1,9 @@
+USER PROMPT 032:
+Date: 2025-08-24
+Request: Please review the Makefile, Dockerfile and docker-compose.yaml fields and help me to make it always update the docker image whenever I run make up. I feel like it is not getting my recent changes on the backend
+
+CONTEXT: User wants to ensure that Docker always rebuilds the backend image with latest code changes when running make up, suspecting that cached images are preventing updates from being reflected
+
+RESOLUTION NEEDED: Review and update Docker configuration files to force rebuild of images and ensure latest code changes are always included
+
+STATUS: Need to examine and modify Docker build/deployment configuration

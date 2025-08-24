@@ -40,6 +40,8 @@ services:
     build:
       context: .
       target: api
+      no_cache: false
+      pull: true
     container_name: feature_voting_api
     depends_on:
       postgres:

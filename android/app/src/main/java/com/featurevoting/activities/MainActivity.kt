@@ -125,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val voteResponse = response.body()!!
                     
-                    // Update the feature in the list
+                    // Update the feature in the list immediately
                     val index = features.indexOfFirst { it.id == feature.id }
                     if (index != -1) {
                         val updatedFeature = features[index].copy(
@@ -133,15 +133,21 @@ class MainActivity : AppCompatActivity() {
                             hasUserVoted = voteResponse.hasVoted
                         )
                         features[index] = updatedFeature
-                        featureAdapter.notifyItemChanged(index)
+                        
+                        // Force UI update
+                        runOnUiThread {
+                            featureAdapter.notifyItemChanged(index)
+                        }
                     }
                     
                     showToast("Vote added!")
                 } else {
-                    showToast("Failed to vote")
+                    val errorBody = response.errorBody()?.string()
+                    showToast(errorBody ?: "Failed to vote")
                 }
             } catch (e: Exception) {
-                showToast("Network error")
+                android.util.Log.e("MainActivity", "Vote error", e)
+                showToast("Failed to vote. Please try again.")
             }
         }
     }
@@ -154,7 +160,7 @@ class MainActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val voteResponse = response.body()!!
                     
-                    // Update the feature in the list
+                    // Update the feature in the list immediately
                     val index = features.indexOfFirst { it.id == feature.id }
                     if (index != -1) {
                         val updatedFeature = features[index].copy(
@@ -162,15 +168,21 @@ class MainActivity : AppCompatActivity() {
                             hasUserVoted = voteResponse.hasVoted
                         )
                         features[index] = updatedFeature
-                        featureAdapter.notifyItemChanged(index)
+                        
+                        // Force UI update
+                        runOnUiThread {
+                            featureAdapter.notifyItemChanged(index)
+                        }
                     }
                     
                     showToast("Vote removed!")
                 } else {
-                    showToast("Failed to remove vote")
+                    val errorBody = response.errorBody()?.string()
+                    showToast(errorBody ?: "Failed to remove vote")
                 }
             } catch (e: Exception) {
-                showToast("Network error")
+                android.util.Log.e("MainActivity", "Remove vote error", e)
+                showToast("Failed to remove vote. Please try again.")
             }
         }
     }

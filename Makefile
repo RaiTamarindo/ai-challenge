@@ -9,7 +9,7 @@ export POSTGRES_STANDARD_USERNAME ?= voting_app
 export POSTGRES_STANDARD_PASSWORD ?= voting_app_pass
 export POSTGRES_DB ?= feature_voting_platform
 
-.PHONY: help infra infra-up infra-down infra-logs infra-clean migrate-up migrate-down migrate-status migration db-setup api api-down api-logs up down user
+.PHONY: help infra infra-up infra-down infra-logs infra-clean migrate-up migrate-down migrate-status migration db-setup api api-build api-down api-logs up up-build down rebuild user
 
 help: ## Show this help message
 	@echo "Feature Voting Platform - Available commands:"
@@ -93,8 +93,20 @@ db-connect-app: ## Connect to database as application user
 # Development helpers
 dev-reset: infra-down infra migrate-up ## Reset development environment
 
+rebuild: ## Force rebuild all images and restart services
+	@echo "Stopping all services..."
+	docker-compose down
+	@echo "Removing existing images..."
+	docker-compose build --no-cache
+	@echo "Starting services with fresh images..."
+	$(MAKE) up
+
 # API management
 api: ## Start API service
+	docker-compose up -d api
+
+api-build: ## Build and start API service (forces rebuild)
+	docker-compose build --no-cache api
 	docker-compose up -d api
 
 api-down: ## Stop API service
@@ -105,6 +117,8 @@ api-logs: ## Show API logs
 
 # Development workflow
 up: infra api ## Start complete development environment (database + API)
+
+up-build: infra api-build ## Start development environment with forced rebuild
 
 down: ## Stop complete development environment
 	docker-compose down

@@ -257,11 +257,18 @@ func (r *FeatureRepository) FeatureExists(id int) (bool, error) {
 
 // AddVote adds a vote for a feature
 func (r *FeatureRepository) AddVote(userID, featureID int) error {
+	// Begin transaction with SERIALIZABLE isolation level
 	tx, err := r.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback()
+	
+	// Set transaction isolation level to SERIALIZABLE
+	_, err = tx.Exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+	if err != nil {
+		return fmt.Errorf("failed to set isolation level: %w", err)
+	}
 	
 	// Insert vote
 	query := `INSERT INTO votes (user_id, feature_id) VALUES ($1, $2)`
@@ -270,16 +277,30 @@ func (r *FeatureRepository) AddVote(userID, featureID int) error {
 		return fmt.Errorf("failed to add vote: %w", err)
 	}
 	
+	// Update feature vote count
+	updateQuery := `UPDATE features SET vote_count = vote_count + 1 WHERE id = $1`
+	_, err = tx.Exec(updateQuery, featureID)
+	if err != nil {
+		return fmt.Errorf("failed to update vote count: %w", err)
+	}
+	
 	return tx.Commit()
 }
 
 // RemoveVote removes a vote from a feature
 func (r *FeatureRepository) RemoveVote(userID, featureID int) error {
+	// Begin transaction with SERIALIZABLE isolation level
 	tx, err := r.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback()
+	
+	// Set transaction isolation level to SERIALIZABLE
+	_, err = tx.Exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+	if err != nil {
+		return fmt.Errorf("failed to set isolation level: %w", err)
+	}
 	
 	// Delete vote
 	query := `DELETE FROM votes WHERE user_id = $1 AND feature_id = $2`
@@ -295,6 +316,13 @@ func (r *FeatureRepository) RemoveVote(userID, featureID int) error {
 	
 	if rowsAffected == 0 {
 		return fmt.Errorf("vote not found")
+	}
+	
+	// Update feature vote count (decrement)
+	updateQuery := `UPDATE features SET vote_count = vote_count - 1 WHERE id = $1`
+	_, err = tx.Exec(updateQuery, featureID)
+	if err != nil {
+		return fmt.Errorf("failed to update vote count: %w", err)
 	}
 	
 	return tx.Commit()

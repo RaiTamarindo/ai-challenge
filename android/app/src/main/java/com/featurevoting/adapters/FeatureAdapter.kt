@@ -36,7 +36,7 @@ class FeatureAdapter(
             binding.apply {
                 tvTitle.text = feature.title
                 tvDescription.text = feature.description
-                tvCreatedBy.text = root.context.getString(R.string.created_by, feature.createdByUser)
+                tvCreatedBy.text = root.context.getString(R.string.created_by, feature.createdByUser ?: "Unknown")
                 tvVoteCount.text = root.context.getString(R.string.votes_count, feature.voteCount)
                 
                 // Update vote button

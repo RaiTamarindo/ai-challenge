@@ -1,0 +1,17 @@
+USER PROMPT 028:
+Date: 2025-08-24
+Request: That was fixed and now I can identify some issues in the UI:
+- When I hit on vote in any listed features, UI shows an error message saying "Network error", but looking to the API logs I can see that the vote was computed successfully
+- The vote counts are always 0, so is not getting updating when I hit vote, even using a different user (this is backend related, since I query the database and see that all counts are zero)
+About the backend issue I can see that it not includes updating the features table to increment/decrement the vote_count column. Please add a second query to the transaction to make this update and make the transaction isolation level serializable in both AddVote and RemoveVote functions of feature repo.
+
+CONTEXT: After fixing the ActionBar issue, user found two problems:
+1. Android app shows "Network error" despite successful API calls
+2. Vote counts remain at 0 in database - backend AddVote/RemoveVote functions don't update the features.vote_count column
+
+RESOLUTION NEEDED:
+1. Fix Android error handling for successful vote operations
+2. Update backend feature repository to include vote_count updates in transactions
+3. Set transaction isolation to SERIALIZABLE for vote operations
+
+STATUS: Need to fix both frontend error handling and backend vote count updates
