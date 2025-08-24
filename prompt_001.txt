@@ -1,0 +1,1 @@
+Starting from now, for each prompt I send you log it into a prompt_xxx.txt file, where xxx starts from 001 to 999

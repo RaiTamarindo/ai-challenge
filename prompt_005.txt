@@ -1,0 +1,1 @@
+it seems the setup you did in docker-compose for dependendy between sql-migrate and postgres services is not working. I tried to run make infra and I got this error message: /var/run/postgresql:5432 - no response

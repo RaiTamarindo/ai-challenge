@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: feature_voting_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-feature_voting_platform}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-postgres_admin_pass}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_ADMIN_USERNAME:-postgres} -d ${POSTGRES_DB:-feature_voting_platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sql-migrate:
+    build:
+      context: .
+      target: sql-migrate
+    container_name: feature_voting_migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_ADMIN_USERNAME:-postgres}:${POSTGRES_ADMIN_PASSWORD:-postgres_admin_pass}@postgres:5432/${POSTGRES_DB:-feature_voting_platform}?sslmode=disable
+    profiles:
+      - migration
+    restart: "no"
+
+volumes:
+  postgres_data:
