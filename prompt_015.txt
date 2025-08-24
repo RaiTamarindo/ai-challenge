@@ -1,0 +1,1 @@
+Thank you! It worked! Now could you generate a Postman collection containing all requests to the api?

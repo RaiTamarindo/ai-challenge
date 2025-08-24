@@ -1,0 +1,718 @@
+{
+  "info": {
+    "_postman_id": "f47c8b4a-1a5e-4c3a-b8d2-3e4f5a6b7c8d",
+    "name": "Feature Voting Platform API",
+    "description": "Complete API collection for the Feature Voting Platform with authentication, feature management, and voting endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345678"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [""],
+        "type": "text/javascript"
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "exec": [""],
+        "type": "text/javascript"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "api_version",
+      "value": "v1",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "feature_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', responseJson.token);",
+                  "    pm.collectionVariables.set('user_id', responseJson.user.id);",
+                  "    pm.test('Login successful', () => {",
+                  "        pm.expect(responseJson.message).to.eql('Login successful');",
+                  "        pm.expect(responseJson.token).to.be.a('string');",
+                  "    });",
+                  "} else {",
+                  "    pm.test('Login failed', () => {",
+                  "        pm.expect(responseCode.code).to.be.oneOf([400, 401]);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"testpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Profile retrieved successfully', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.user).to.have.property('id');",
+                  "    pm.expect(responseJson.user).to.have.property('username');",
+                  "    pm.expect(responseJson.user).to.have.property('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "auth", "profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Features",
+      "item": [
+        {
+          "name": "Create Feature",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (responseCode.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('feature_id', responseJson.feature.id);",
+                  "    pm.test('Feature created successfully', () => {",
+                  "        pm.expect(responseJson.message).to.eql('Feature created successfully');",
+                  "        pm.expect(responseJson.feature.title).to.be.a('string');",
+                  "        pm.expect(responseJson.feature.vote_count).to.eql(0);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Dark Mode Theme\",\n  \"description\": \"Add a dark mode theme to improve user experience during night time usage. This should include proper contrast ratios and be easy on the eyes.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "features"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Features",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Features retrieved successfully', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('features');",
+                  "    pm.expect(responseJson).to.have.property('total');",
+                  "    pm.expect(responseJson.features).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features?page=1&per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "features"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Features (No Auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Features retrieved successfully without auth', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('features');",
+                  "    pm.expect(responseJson.features).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "features"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Feature",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Feature retrieved successfully', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.feature).to.have.property('id');",
+                  "    pm.expect(responseJson.feature).to.have.property('title');",
+                  "    pm.expect(responseJson.feature).to.have.property('vote_count');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features/{{feature_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "features", "{{feature_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Feature",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Feature updated successfully', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.eql('Feature updated successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Enhanced Dark Mode Theme\",\n  \"description\": \"Add a comprehensive dark mode theme with multiple color schemes and automatic switching based on system preferences.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features/{{feature_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "features", "{{feature_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Features",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('User features retrieved successfully', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('features');",
+                  "    pm.expect(responseJson).to.have.property('count');",
+                  "    pm.expect(responseJson.features).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features/my",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "features", "my"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Feature",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Feature deleted successfully', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.eql('Feature deleted successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features/{{feature_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "features", "{{feature_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Voting",
+      "item": [
+        {
+          "name": "Vote for Feature",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Vote added successfully', () => {",
+                  "    if (responseCode.code === 200) {",
+                  "        const responseJson = pm.response.json();",
+                  "        pm.expect(responseJson.message).to.eql('Vote added successfully');",
+                  "        pm.expect(responseJson.has_voted).to.be.true;",
+                  "        pm.expect(responseJson.vote_count).to.be.a('number');",
+                  "    } else if (responseCode.code === 409) {",
+                  "        const responseJson = pm.response.json();",
+                  "        pm.expect(responseJson.error).to.include('already voted');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features/{{feature_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "{{api_version}}",
+                "features",
+                "{{feature_id}}",
+                "vote"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Vote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Vote toggled successfully', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.be.oneOf(['Vote added successfully', 'Vote removed successfully']);",
+                  "    pm.expect(responseJson.vote_count).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features/{{feature_id}}/toggle-vote",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "{{api_version}}",
+                "features",
+                "{{feature_id}}",
+                "toggle-vote"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Vote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Vote removed successfully', () => {",
+                  "    if (responseCode.code === 200) {",
+                  "        const responseJson = pm.response.json();",
+                  "        pm.expect(responseJson.message).to.eql('Vote removed successfully');",
+                  "        pm.expect(responseJson.has_voted).to.be.false;",
+                  "    } else if (responseCode.code === 404) {",
+                  "        const responseJson = pm.response.json();",
+                  "        pm.expect(responseJson.error).to.include('not found');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features/{{feature_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "{{api_version}}",
+                "features",
+                "{{feature_id}}",
+                "vote"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Votes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('User votes retrieved successfully', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('votes');",
+                  "    pm.expect(responseJson).to.have.property('count');",
+                  "    pm.expect(responseJson.votes).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/votes/my",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "votes", "my"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Cases",
+      "item": [
+        {
+          "name": "Unauthorized Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Unauthorized access blocked', () => {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Feature\",\n  \"description\": \"This should fail\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "features"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Feature ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Invalid feature ID handled', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features/invalid",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "features", "invalid"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Feature Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Feature not found handled', () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/{{api_version}}/features/99999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "{{api_version}}", "features", "99999"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

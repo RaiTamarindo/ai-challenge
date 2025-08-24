@@ -1,0 +1,4 @@
+I have two initial issues for you, but I'm still reviewing. But please fix them: 1) update go in go.mod to 1.24.1; 2) `make infra` works, but when I try to run `make api` or `make dev` I get the following error like it is trying to run the migration again, I don't know: 2025/08/24 13:48:48 Failed to apply migrations: pq: unterminated dollar-quoted string at or near "$$
+BEGIN
+   NEW.updated_at = CURRENT_TIMESTAMP" handling 20250824120000_initial_schema.sql
+make: *** [migrate-up] Error 1

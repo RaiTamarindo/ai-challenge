@@ -1,0 +1,1 @@
+Build is still broken but only because in the votes handler, you used GetByID function from feature repo to check if the feature exists, please add a new repo function that run a more performatic query for this case like: SELECT EXISTS (SELECT 1 FROM features WHERE id = :id);

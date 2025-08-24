@@ -36,5 +36,38 @@ services:
       - migration
     restart: "no"
 
+  api:
+    build:
+      context: .
+      target: api
+    container_name: feature_voting_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_STANDARD_USERNAME:-voting_app}:${POSTGRES_STANDARD_PASSWORD:-voting_app_pass}@postgres:5432/${POSTGRES_DB:-feature_voting_platform}?sslmode=disable
+      APP_PORT: 8080
+      APP_HOST: 0.0.0.0
+      APP_ENV: ${APP_ENV:-development}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+    restart: unless-stopped
+
+  cli:
+    build:
+      context: .
+      target: cli
+    container_name: feature_voting_cli
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_STANDARD_USERNAME:-voting_app}:${POSTGRES_STANDARD_PASSWORD:-voting_app_pass}@postgres:5432/${POSTGRES_DB:-feature_voting_platform}?sslmode=disable
+      APP_ENV: ${APP_ENV:-development}
+    profiles:
+      - cli
+    restart: "no"
+
 volumes:
   postgres_data:

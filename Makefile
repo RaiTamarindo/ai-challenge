@@ -9,7 +9,7 @@ export POSTGRES_STANDARD_USERNAME ?= voting_app
 export POSTGRES_STANDARD_PASSWORD ?= voting_app_pass
 export POSTGRES_DB ?= feature_voting_platform
 
-.PHONY: help infra infra-up infra-down infra-logs infra-clean migrate-up migrate-down migrate-status migration db-setup
+.PHONY: help infra infra-up infra-down infra-logs infra-clean migrate-up migrate-down migrate-status migration db-setup api api-down api-logs up down user
 
 help: ## Show this help message
 	@echo "Feature Voting Platform - Available commands:"
@@ -92,6 +92,33 @@ db-connect-app: ## Connect to database as application user
 
 # Development helpers
 dev-reset: infra-down infra migrate-up ## Reset development environment
+
+# API management
+api: ## Start API service
+	docker-compose up -d api
+
+api-down: ## Stop API service
+	docker-compose stop api
+
+api-logs: ## Show API logs
+	docker-compose logs -f api
+
+# Development workflow
+up: infra api ## Start complete development environment (database + API)
+
+down: ## Stop complete development environment
+	docker-compose down
+
+# CLI commands
+user: ## Create a new user (usage: make user name=username email=user@email.com password=password)
+	@if [ -z "$(name)" ] || [ -z "$(email)" ] || [ -z "$(password)" ]; then \
+		echo "Error: All parameters are required."; \
+		echo "Usage: make user name=<username> email=<email> password=<password>"; \
+		echo "Example: make user name=Rai email=raitamarindo@gmail.com password=12345"; \
+		exit 1; \
+	fi
+	@echo "Creating user: $(name) <$(email)>"
+	@docker-compose --profile cli run --rm cli -command=create-user -name="$(name)" -email="$(email)" -password="$(password)"
 
 # Show current environment
 env: ## Show current environment variables

@@ -38,62 +38,8 @@ CREATE INDEX idx_votes_feature_id ON votes(feature_id);
 CREATE INDEX idx_votes_user_id ON votes(user_id);
 CREATE INDEX idx_features_created_at ON features(created_at DESC);
 
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP;
-   RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Triggers for auto-updating updated_at
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_features_updated_at BEFORE UPDATE ON features
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Function to increment vote count
-CREATE OR REPLACE FUNCTION increment_feature_vote_count()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE features 
-    SET vote_count = vote_count + 1 
-    WHERE id = NEW.feature_id;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Function to decrement vote count
-CREATE OR REPLACE FUNCTION decrement_feature_vote_count()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE features 
-    SET vote_count = vote_count - 1 
-    WHERE id = OLD.feature_id;
-    RETURN OLD;
-END;
-$$ language 'plpgsql';
-
--- Triggers to maintain vote_count consistency
-CREATE TRIGGER vote_count_increment AFTER INSERT ON votes
-    FOR EACH ROW EXECUTE FUNCTION increment_feature_vote_count();
-
-CREATE TRIGGER vote_count_decrement AFTER DELETE ON votes
-    FOR EACH ROW EXECUTE FUNCTION decrement_feature_vote_count();
 
 -- +migrate Down
--- Drop triggers first
-DROP TRIGGER IF EXISTS vote_count_decrement ON votes;
-DROP TRIGGER IF EXISTS vote_count_increment ON votes;
-DROP TRIGGER IF EXISTS update_features_updated_at ON features;
-DROP TRIGGER IF EXISTS update_users_updated_at ON users;
-
--- Drop functions
-DROP FUNCTION IF EXISTS decrement_feature_vote_count();
-DROP FUNCTION IF EXISTS increment_feature_vote_count();
-DROP FUNCTION IF EXISTS update_updated_at_column();
 
 -- Drop indexes
 DROP INDEX IF EXISTS idx_features_created_at;

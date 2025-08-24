@@ -1,0 +1,4 @@
+I got same migration error again, please remove all sql functions and triggers, I wont need them: 2025/08/24 13:53:45 Failed to apply migrations: pq: unterminated dollar-quoted string at or near "$update_timestamp$
+BEGIN
+   NEW.updated_at = CURRENT_TIMESTAMP" handling 20250824120000_initial_schema.sql
+make: *** [migrate-up] Error 1
