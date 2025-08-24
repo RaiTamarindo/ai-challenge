@@ -1,4 +1,4 @@
-package repository
+package postgres
 
 import (
 	"database/sql"
@@ -8,10 +8,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// DB wraps the sql.DB connection
 type DB struct {
 	*sql.DB
 }
 
+// NewDatabase creates a new database connection
 func NewDatabase(databaseURL string) (*DB, error) {
 	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
@@ -27,6 +29,7 @@ func NewDatabase(databaseURL string) (*DB, error) {
 	return &DB{db}, nil
 }
 
+// Close closes the database connection
 func (db *DB) Close() error {
 	return db.DB.Close()
 }

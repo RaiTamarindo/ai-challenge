@@ -1,22 +1,28 @@
-package repository
+package postgres
 
 import (
 	"database/sql"
 	"fmt"
 	"strings"
 
-	"github.com/feature-voting-platform/backend/internal/models"
+	"github.com/feature-voting-platform/backend/domain/features"
+	"github.com/feature-voting-platform/backend/domain/votes"
 )
 
+// FeatureRepository implements both features.Repository and votes.Repository interfaces
 type FeatureRepository struct {
 	db *DB
 }
 
+// NewFeatureRepository creates a new feature repository
 func NewFeatureRepository(db *DB) *FeatureRepository {
 	return &FeatureRepository{db: db}
 }
 
-func (r *FeatureRepository) Create(feature *models.Feature) error {
+// Feature-related methods implementing features.Repository
+
+// Create creates a new feature in the database
+func (r *FeatureRepository) Create(feature *features.Feature) error {
 	query := `
 		INSERT INTO features (title, description, created_by)
 		VALUES ($1, $2, $3)
@@ -33,8 +39,9 @@ func (r *FeatureRepository) Create(feature *models.Feature) error {
 	return nil
 }
 
-func (r *FeatureRepository) GetByID(id int, userID *int) (*models.Feature, error) {
-	feature := &models.Feature{}
+// GetByID retrieves a feature by ID
+func (r *FeatureRepository) GetByID(id int, userID *int) (*features.Feature, error) {
+	feature := &features.Feature{}
 	query := `
 		SELECT f.id, f.title, f.description, f.created_by, u.username,
 		       f.vote_count, f.created_at, f.updated_at
@@ -67,7 +74,8 @@ func (r *FeatureRepository) GetByID(id int, userID *int) (*models.Feature, error
 	return feature, nil
 }
 
-func (r *FeatureRepository) GetAll(page, perPage int, userID *int) ([]models.Feature, int, error) {
+// GetAll retrieves all features with pagination
+func (r *FeatureRepository) GetAll(page, perPage int, userID *int) ([]features.Feature, int, error) {
 	offset := (page - 1) * perPage
 	
 	// Get total count
@@ -94,9 +102,9 @@ func (r *FeatureRepository) GetAll(page, perPage int, userID *int) ([]models.Fea
 	}
 	defer rows.Close()
 	
-	var features []models.Feature
+	var featuresList []features.Feature
 	for rows.Next() {
-		var feature models.Feature
+		var feature features.Feature
 		err := rows.Scan(
 			&feature.ID, &feature.Title, &feature.Description, &feature.CreatedBy,
 			&feature.CreatedByUser, &feature.VoteCount, &feature.CreatedAt, &feature.UpdatedAt,
@@ -114,16 +122,50 @@ func (r *FeatureRepository) GetAll(page, perPage int, userID *int) ([]models.Fea
 			feature.HasUserVoted = hasVoted
 		}
 		
-		features = append(features, feature)
+		featuresList = append(featuresList, feature)
 	}
 	
 	if err = rows.Err(); err != nil {
 		return nil, 0, fmt.Errorf("error iterating features: %w", err)
 	}
 	
-	return features, total, nil
+	return featuresList, total, nil
 }
 
+// GetByCreatedBy retrieves features created by a specific user
+func (r *FeatureRepository) GetByCreatedBy(userID int) ([]features.Feature, error) {
+	query := `
+		SELECT f.id, f.title, f.description, f.created_by, u.username,
+		       f.vote_count, f.created_at, f.updated_at
+		FROM features f
+		LEFT JOIN users u ON f.created_by = u.id
+		WHERE f.created_by = $1
+		ORDER BY f.created_at DESC
+	`
+	
+	rows, err := r.db.Query(query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get features by user: %w", err)
+	}
+	defer rows.Close()
+	
+	var featuresList []features.Feature
+	for rows.Next() {
+		var feature features.Feature
+		err := rows.Scan(
+			&feature.ID, &feature.Title, &feature.Description, &feature.CreatedBy,
+			&feature.CreatedByUser, &feature.VoteCount, &feature.CreatedAt, &feature.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan feature: %w", err)
+		}
+		featuresList = append(featuresList, feature)
+	}
+	
+	return featuresList, nil
+}
+
+// Update updates a feature
 func (r *FeatureRepository) Update(id int, title, description *string) error {
 	setParts := []string{}
 	args := []interface{}{}
@@ -166,10 +208,22 @@ func (r *FeatureRepository) Update(id int, title, description *string) error {
 	return nil
 }
 
+// Delete deletes a feature
 func (r *FeatureRepository) Delete(id int) error {
-	query := `DELETE FROM features WHERE id = $1`
+	tx, err := r.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
 	
-	result, err := r.db.Exec(query, id)
+	// Delete votes first
+	_, err = tx.Exec(`DELETE FROM votes WHERE feature_id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete votes: %w", err)
+	}
+	
+	// Delete feature
+	result, err := tx.Exec(`DELETE FROM features WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete feature: %w", err)
 	}
@@ -183,42 +237,25 @@ func (r *FeatureRepository) Delete(id int) error {
 		return fmt.Errorf("feature not found")
 	}
 	
-	return nil
+	return tx.Commit()
 }
 
-func (r *FeatureRepository) GetByCreatedBy(userID int) ([]models.Feature, error) {
-	query := `
-		SELECT f.id, f.title, f.description, f.created_by, u.username,
-		       f.vote_count, f.created_at, f.updated_at
-		FROM features f
-		LEFT JOIN users u ON f.created_by = u.id
-		WHERE f.created_by = $1
-		ORDER BY f.created_at DESC
-	`
+// FeatureExists checks if a feature exists
+func (r *FeatureRepository) FeatureExists(id int) (bool, error) {
+	var exists bool
+	query := `SELECT EXISTS(SELECT 1 FROM features WHERE id = $1)`
 	
-	rows, err := r.db.Query(query, userID)
+	err := r.db.QueryRow(query, id).Scan(&exists)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get features by user: %w", err)
-	}
-	defer rows.Close()
-	
-	var features []models.Feature
-	for rows.Next() {
-		var feature models.Feature
-		err := rows.Scan(
-			&feature.ID, &feature.Title, &feature.Description, &feature.CreatedBy,
-			&feature.CreatedByUser, &feature.VoteCount, &feature.CreatedAt, &feature.UpdatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan feature: %w", err)
-		}
-		features = append(features, feature)
+		return false, fmt.Errorf("failed to check if feature exists: %w", err)
 	}
 	
-	return features, nil
+	return exists, nil
 }
 
-// Vote-related methods
+// Vote-related methods implementing votes.Repository
+
+// AddVote adds a vote for a feature
 func (r *FeatureRepository) AddVote(userID, featureID int) error {
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -236,6 +273,7 @@ func (r *FeatureRepository) AddVote(userID, featureID int) error {
 	return tx.Commit()
 }
 
+// RemoveVote removes a vote from a feature
 func (r *FeatureRepository) RemoveVote(userID, featureID int) error {
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -262,24 +300,26 @@ func (r *FeatureRepository) RemoveVote(userID, featureID int) error {
 	return tx.Commit()
 }
 
+// HasUserVoted checks if a user has voted for a feature
 func (r *FeatureRepository) HasUserVoted(userID, featureID int) (bool, error) {
 	var exists bool
 	query := `SELECT EXISTS(SELECT 1 FROM votes WHERE user_id = $1 AND feature_id = $2)`
 	
 	err := r.db.QueryRow(query, userID, featureID).Scan(&exists)
 	if err != nil {
-		return false, fmt.Errorf("failed to check if user has voted: %w", err)
+		return false, fmt.Errorf("failed to check user vote: %w", err)
 	}
 	
 	return exists, nil
 }
 
-func (r *FeatureRepository) GetUserVotes(userID int) ([]models.Vote, error) {
+// GetUserVotes retrieves all votes made by a user
+func (r *FeatureRepository) GetUserVotes(userID int) ([]votes.Vote, error) {
 	query := `
-		SELECT id, user_id, feature_id, created_at
-		FROM votes
-		WHERE user_id = $1
-		ORDER BY created_at DESC
+		SELECT v.id, v.user_id, v.feature_id, v.created_at
+		FROM votes v
+		WHERE v.user_id = $1
+		ORDER BY v.created_at DESC
 	`
 	
 	rows, err := r.db.Query(query, userID)
@@ -288,27 +328,17 @@ func (r *FeatureRepository) GetUserVotes(userID int) ([]models.Vote, error) {
 	}
 	defer rows.Close()
 	
-	var votes []models.Vote
+	var votesList []votes.Vote
 	for rows.Next() {
-		var vote models.Vote
-		err := rows.Scan(&vote.ID, &vote.UserID, &vote.FeatureID, &vote.CreatedAt)
+		var vote votes.Vote
+		err := rows.Scan(
+			&vote.ID, &vote.UserID, &vote.FeatureID, &vote.CreatedAt,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan vote: %w", err)
 		}
-		votes = append(votes, vote)
+		votesList = append(votesList, vote)
 	}
 	
-	return votes, nil
-}
-
-func (r *FeatureRepository) FeatureExists(id int) (bool, error) {
-	var exists bool
-	query := `SELECT EXISTS(SELECT 1 FROM features WHERE id = $1)`
-	
-	err := r.db.QueryRow(query, id).Scan(&exists)
-	if err != nil {
-		return false, fmt.Errorf("failed to check if feature exists: %w", err)
-	}
-	
-	return exists, nil
+	return votesList, nil
 }

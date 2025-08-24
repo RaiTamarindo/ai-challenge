@@ -1,4 +1,4 @@
-package utils
+package logs
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// LogLevel represents the severity level of a log entry
 type LogLevel string
 
 const (
@@ -16,6 +17,7 @@ const (
 	LogLevelDebug   LogLevel = "DEBUG"
 )
 
+// LogEntry represents a structured log entry
 type LogEntry struct {
 	Timestamp  time.Time              `json:"timestamp"`
 	Level      LogLevel               `json:"level"`
@@ -33,17 +35,36 @@ type LogEntry struct {
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
-func LogInfo(message string, fields ...LogField) {
+// Logger defines the interface for logging operations
+type Logger interface {
+	Info(message string, fields ...LogField)
+	Warning(message string, fields ...LogField)
+	Error(message string, err error, fields ...LogField)
+	Debug(message string, fields ...LogField)
+}
+
+// JSONLogger implements Logger interface with JSON structured logging
+type JSONLogger struct{}
+
+// NewJSONLogger creates a new JSON logger
+func NewJSONLogger() *JSONLogger {
+	return &JSONLogger{}
+}
+
+// Info logs an info message
+func (l *JSONLogger) Info(message string, fields ...LogField) {
 	logEntry := createLogEntry(LogLevelInfo, message, fields...)
 	outputLog(logEntry)
 }
 
-func LogWarning(message string, fields ...LogField) {
+// Warning logs a warning message
+func (l *JSONLogger) Warning(message string, fields ...LogField) {
 	logEntry := createLogEntry(LogLevelWarning, message, fields...)
 	outputLog(logEntry)
 }
 
-func LogError(message string, err error, fields ...LogField) {
+// Error logs an error message with stack trace
+func (l *JSONLogger) Error(message string, err error, fields ...LogField) {
 	logEntry := createLogEntry(LogLevelError, message, fields...)
 	if err != nil {
 		logEntry.Error = err.Error()
@@ -52,61 +73,72 @@ func LogError(message string, err error, fields ...LogField) {
 	outputLog(logEntry)
 }
 
-func LogDebug(message string, fields ...LogField) {
+// Debug logs a debug message
+func (l *JSONLogger) Debug(message string, fields ...LogField) {
 	logEntry := createLogEntry(LogLevelDebug, message, fields...)
 	outputLog(logEntry)
 }
 
+// LogField is a function that modifies a log entry
 type LogField func(*LogEntry)
 
+// WithUserID adds user ID to log entry
 func WithUserID(userID int) LogField {
 	return func(entry *LogEntry) {
 		entry.UserID = &userID
 	}
 }
 
+// WithFeatureID adds feature ID to log entry
 func WithFeatureID(featureID int) LogField {
 	return func(entry *LogEntry) {
 		entry.FeatureID = &featureID
 	}
 }
 
+// WithVoteCount adds vote count to log entry
 func WithVoteCount(voteCount int) LogField {
 	return func(entry *LogEntry) {
 		entry.VoteCount = &voteCount
 	}
 }
 
+// WithEmail adds email to log entry
 func WithEmail(email string) LogField {
 	return func(entry *LogEntry) {
 		entry.Email = email
 	}
 }
 
+// WithUsername adds username to log entry
 func WithUsername(username string) LogField {
 	return func(entry *LogEntry) {
 		entry.Username = username
 	}
 }
 
+// WithMethod adds HTTP method to log entry
 func WithMethod(method string) LogField {
 	return func(entry *LogEntry) {
 		entry.Method = method
 	}
 }
 
+// WithPath adds request path to log entry
 func WithPath(path string) LogField {
 	return func(entry *LogEntry) {
 		entry.Path = path
 	}
 }
 
+// WithStatusCode adds HTTP status code to log entry
 func WithStatusCode(statusCode int) LogField {
 	return func(entry *LogEntry) {
 		entry.StatusCode = &statusCode
 	}
 }
 
+// WithMetadata adds custom metadata to log entry
 func WithMetadata(key string, value interface{}) LogField {
 	return func(entry *LogEntry) {
 		if entry.Metadata == nil {

@@ -7,10 +7,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/feature-voting-platform/backend/adapters/auth"
+	"github.com/feature-voting-platform/backend/adapters/postgres"
+	"github.com/feature-voting-platform/backend/domain/users"
 	"github.com/feature-voting-platform/backend/internal/config"
-	"github.com/feature-voting-platform/backend/internal/models"
-	"github.com/feature-voting-platform/backend/internal/repository"
-	"github.com/feature-voting-platform/backend/pkg/utils"
 )
 
 func main() {
@@ -18,14 +18,15 @@ func main() {
 	cfg := config.Load()
 
 	// Initialize database
-	db, err := repository.NewDatabase(cfg.Database.URL)
+	db, err := postgres.NewDatabase(cfg.Database.URL)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
-	// Initialize repositories
-	userRepo := repository.NewUserRepository(db)
+	// Initialize repositories and services
+	userRepo := postgres.NewUserRepository(db)
+	passwordService := auth.NewBCryptPasswordService()
 
 	// Define command line flags
 	var (
@@ -39,7 +40,7 @@ func main() {
 
 	switch *command {
 	case "create-user":
-		err := createUser(userRepo, *name, *email, *password)
+		err := createUser(userRepo, passwordService, *name, *email, *password)
 		if err != nil {
 			log.Fatalf("Failed to create user: %v", err)
 		}
@@ -58,7 +59,7 @@ func main() {
 	}
 }
 
-func createUser(userRepo *repository.UserRepository, username, email, password string) error {
+func createUser(userRepo users.Repository, passwordService auth.PasswordService, username, email, password string) error {
 	// Validate input
 	if username == "" {
 		return fmt.Errorf("username is required")
@@ -84,31 +85,24 @@ func createUser(userRepo *repository.UserRepository, username, email, password s
 		return fmt.Errorf("invalid email format")
 	}
 
-	// Check if user already exists
-	emailExists, err := userRepo.EmailExists(email)
-	if err != nil {
-		return fmt.Errorf("failed to check if email exists: %w", err)
-	}
-	if emailExists {
+	// Check if user already exists by email
+	if _, err := userRepo.GetByEmail(email); err == nil {
 		return fmt.Errorf("user with email '%s' already exists", email)
 	}
 
-	usernameExists, err := userRepo.UsernameExists(username)
-	if err != nil {
-		return fmt.Errorf("failed to check if username exists: %w", err)
-	}
-	if usernameExists {
+	// Check if user already exists by username
+	if _, err := userRepo.GetByUsername(username); err == nil {
 		return fmt.Errorf("user with username '%s' already exists", username)
 	}
 
 	// Hash password
-	hashedPassword, err := utils.HashPassword(password)
+	hashedPassword, err := passwordService.HashPassword(password)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	// Create user
-	user := &models.User{
+	user := &users.User{
 		Username:     username,
 		Email:        email,
 		PasswordHash: hashedPassword,

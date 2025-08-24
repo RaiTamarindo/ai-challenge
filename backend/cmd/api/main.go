@@ -3,11 +3,11 @@ package main
 import (
 	"log"
 
+	"github.com/feature-voting-platform/backend/adapters/auth"
+	"github.com/feature-voting-platform/backend/adapters/logs"
+	"github.com/feature-voting-platform/backend/adapters/postgres"
+	"github.com/feature-voting-platform/backend/adapters/rest"
 	"github.com/feature-voting-platform/backend/internal/config"
-	"github.com/feature-voting-platform/backend/internal/handlers"
-	"github.com/feature-voting-platform/backend/internal/middleware"
-	"github.com/feature-voting-platform/backend/internal/repository"
-	"github.com/feature-voting-platform/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 
 	swaggerFiles "github.com/swaggo/files"
@@ -37,21 +37,31 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
+	// Initialize logger
+	logger := logs.NewJSONLogger()
+
+	// Test our custom logger
+	logger.Info("Testing custom logger on server startup")
+
 	// Initialize database
-	db, err := repository.NewDatabase(cfg.Database.URL)
+	db, err := postgres.NewDatabase(cfg.Database.URL)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
 	// Initialize repositories
-	userRepo := repository.NewUserRepository(db)
-	featureRepo := repository.NewFeatureRepository(db)
+	userRepo := postgres.NewUserRepository(db)
+	featureRepo := postgres.NewFeatureRepository(db)
+
+	// Initialize auth services
+	tokenService := auth.NewJWTService(cfg.JWT.Secret)
+	passwordService := auth.NewBCryptPasswordService()
 
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(userRepo, cfg.JWT.Secret)
-	featureHandler := handlers.NewFeatureHandler(featureRepo)
-	voteHandler := handlers.NewVoteHandler(featureRepo)
+	authHandler := rest.NewAuthHandler(userRepo, tokenService, passwordService, logger)
+	featureHandler := rest.NewFeatureHandler(featureRepo, logger)
+	voteHandler := rest.NewVoteHandler(featureRepo, featureRepo, logger)
 
 	// Setup Gin
 	if cfg.Server.Env == "production" {
@@ -61,8 +71,8 @@ func main() {
 	r := gin.Default()
 
 	// Middleware
-	r.Use(middleware.CORSMiddleware())
-	r.Use(middleware.LoggingMiddleware())
+	r.Use(rest.CORSMiddleware())
+	r.Use(rest.LoggingMiddleware(logger))
 	r.Use(gin.Recovery())
 
 	// Health check
@@ -80,31 +90,31 @@ func main() {
 		auth := v1.Group("/auth")
 		{
 			auth.POST("/login", authHandler.Login)
-			auth.GET("/profile", middleware.AuthMiddleware(cfg.JWT.Secret), authHandler.GetProfile)
+			auth.GET("/profile", rest.AuthMiddleware(tokenService), authHandler.GetProfile)
 		}
 
 		// Feature routes
 		features := v1.Group("/features")
 		{
 			// Public routes (with optional auth for vote status)
-			features.GET("", middleware.OptionalAuthMiddleware(cfg.JWT.Secret), featureHandler.GetFeatures)
-			features.GET("/:id", middleware.OptionalAuthMiddleware(cfg.JWT.Secret), featureHandler.GetFeature)
+			features.GET("", rest.OptionalAuthMiddleware(tokenService), featureHandler.GetFeatures)
+			features.GET("/:id", rest.OptionalAuthMiddleware(tokenService), featureHandler.GetFeature)
 
 			// Protected routes
-			features.POST("", middleware.AuthMiddleware(cfg.JWT.Secret), featureHandler.CreateFeature)
-			features.PUT("/:id", middleware.AuthMiddleware(cfg.JWT.Secret), featureHandler.UpdateFeature)
-			features.DELETE("/:id", middleware.AuthMiddleware(cfg.JWT.Secret), featureHandler.DeleteFeature)
-			features.GET("/my", middleware.AuthMiddleware(cfg.JWT.Secret), featureHandler.GetMyFeatures)
+			features.POST("", rest.AuthMiddleware(tokenService), featureHandler.CreateFeature)
+			features.PUT("/:id", rest.AuthMiddleware(tokenService), featureHandler.UpdateFeature)
+			features.DELETE("/:id", rest.AuthMiddleware(tokenService), featureHandler.DeleteFeature)
+			features.GET("/my", rest.AuthMiddleware(tokenService), featureHandler.GetMyFeatures)
 
 			// Voting routes
-			features.POST("/:id/vote", middleware.AuthMiddleware(cfg.JWT.Secret), voteHandler.VoteForFeature)
-			features.DELETE("/:id/vote", middleware.AuthMiddleware(cfg.JWT.Secret), voteHandler.RemoveVoteFromFeature)
-			features.POST("/:id/toggle-vote", middleware.AuthMiddleware(cfg.JWT.Secret), voteHandler.ToggleVote)
+			features.POST("/:id/vote", rest.AuthMiddleware(tokenService), voteHandler.VoteForFeature)
+			features.DELETE("/:id/vote", rest.AuthMiddleware(tokenService), voteHandler.RemoveVoteFromFeature)
+			features.POST("/:id/toggle-vote", rest.AuthMiddleware(tokenService), voteHandler.ToggleVote)
 		}
 
 		// Vote routes
 		votes := v1.Group("/votes")
-		votes.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
+		votes.Use(rest.AuthMiddleware(tokenService))
 		{
 			votes.GET("/my", voteHandler.GetUserVotes)
 		}
@@ -113,12 +123,9 @@ func main() {
 	// Swagger documentation
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Test our custom logger
-	utils.LogInfo("Testing custom logger on server startup")
-	
 	log.Printf("Starting server on %s:%s", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Swagger documentation available at: http://%s:%s/swagger/index.html", cfg.Server.Host, cfg.Server.Port)
-	
+
 	if err := r.Run(cfg.Server.Host + ":" + cfg.Server.Port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

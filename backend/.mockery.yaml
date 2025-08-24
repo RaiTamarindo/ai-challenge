@@ -1,0 +1,21 @@
+with-expecter: true
+dir: "{{.InterfaceDir}}/mocks"
+mockname: "Mock{{.InterfaceName}}"
+outpkg: mocks
+packages:
+  github.com/feature-voting-platform/backend/domain/users:
+    interfaces:
+      Repository:
+  github.com/feature-voting-platform/backend/domain/features:
+    interfaces:
+      Repository:
+  github.com/feature-voting-platform/backend/domain/votes:
+    interfaces:
+      Repository:
+  github.com/feature-voting-platform/backend/adapters/auth:
+    interfaces:
+      TokenService:
+      PasswordService:
+  github.com/feature-voting-platform/backend/adapters/logs:
+    interfaces:
+      Logger:
