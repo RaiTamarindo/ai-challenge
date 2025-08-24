@@ -45,15 +45,7 @@ The API will be available at: `http://localhost:8080`
 ### Authentication Endpoints
 
 ```bash
-# Register a new user
-POST /api/v1/auth/register
-{
-  "username": "john_doe",
-  "email": "john@example.com", 
-  "password": "securepassword"
-}
-
-# Login
+# Login (users must be created by developers first)
 POST /api/v1/auth/login
 {
   "email": "john@example.com",
@@ -63,6 +55,23 @@ POST /api/v1/auth/login
 # Get user profile (requires JWT token)
 GET /api/v1/auth/profile
 Authorization: Bearer <token>
+```
+
+### User Management (Developer Only)
+
+**Important**: User registration is not publicly available. Only developers can create user accounts using the CLI tool.
+
+```bash
+# Create a new user (developer only)
+make user name=john_doe email=john@example.com password=securepassword
+
+# Example output:
+# Creating user: john_doe <john@example.com>
+# ✅ User created successfully!
+#    ID: 1
+#    Username: john_doe
+#    Email: john@example.com
+#    Created: 2024-08-24 14:30:00
 ```
 
 ### Feature Endpoints
@@ -140,13 +149,16 @@ make db-connect     # Connect as admin user
 make db-connect-app # Connect as application user
 
 # API management
-make api-up         # Start API service
+make api            # Start API service
 make api-down       # Stop API service  
 make api-logs       # Show API logs
 
 # Development workflow
-make dev            # Start complete development environment
-make dev-reset      # Reset development environment
+make up             # Start complete development environment
+make down           # Stop complete development environment
+
+# User management (DEVELOPER ONLY)
+make user name=<username> email=<email> password=<password>  # Create new user
 
 # Utilities
 make env            # Show environment variables
@@ -213,6 +225,7 @@ JWT_SECRET=your_jwt_secret_change_in_production
 
 - **JWT Authentication**: Secure token-based auth
 - **Password hashing**: bcrypt with salt
+- **Admin-only user creation**: No public registration endpoint
 - **CORS support**: Configurable CORS middleware
 - **Input validation**: Request validation and sanitization
 - **Non-root containers**: Security-first Docker images
@@ -273,3 +286,35 @@ JWT_SECRET=your_jwt_secret_change_in_production
   "has_voted": true
 }
 ```
+
+## 👥 User Management
+
+**Important Security Note**: This platform uses admin-only user creation for enhanced security. Users cannot self-register through the API.
+
+### Creating Users (Developers Only)
+
+To add users to the platform, developers must use the CLI tool:
+
+```bash
+# Syntax
+make user name=<username> email=<email> password=<password>
+
+# Examples
+make user name=alice email=alice@company.com password=secure123
+make user name=bob_designer email=bob@company.com password=design456
+make user name=sarah_pm email=sarah@company.com password=product789
+```
+
+### User Login Flow
+
+1. **Developer creates user** using `make user` command
+2. **User receives credentials** via secure channel (email, Slack, etc.)
+3. **User logs in** using POST `/api/v1/auth/login`
+4. **API returns JWT token** for subsequent requests
+
+### Benefits of Admin-Only Registration
+
+- **Enhanced security**: Prevents spam accounts and unauthorized access
+- **Controlled access**: Only intended team members can access the platform  
+- **User verification**: Ensures all users are legitimate team members
+- **Audit trail**: All user creation is logged and traceable

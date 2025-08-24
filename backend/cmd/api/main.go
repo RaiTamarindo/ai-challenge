@@ -3,11 +3,11 @@ package main
 import (
 	"log"
 
-	"github.com/gin-gonic/gin"
 	"github.com/feature-voting-platform/backend/internal/config"
 	"github.com/feature-voting-platform/backend/internal/handlers"
 	"github.com/feature-voting-platform/backend/internal/middleware"
 	"github.com/feature-voting-platform/backend/internal/repository"
+	"github.com/gin-gonic/gin"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -77,7 +77,6 @@ func main() {
 		// Auth routes (public)
 		auth := v1.Group("/auth")
 		{
-			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 			auth.GET("/profile", middleware.AuthMiddleware(cfg.JWT.Secret), authHandler.GetProfile)
 		}
