@@ -1,0 +1,1 @@
+That's awesome! I just removed manually the auth/register request from code and postman collection, I want to make sure only developers can add new users. Please update the README.md file to reflect that information, giving instruction on how to add users to the platform.

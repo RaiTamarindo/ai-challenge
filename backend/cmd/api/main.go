@@ -7,6 +7,7 @@ import (
 	"github.com/feature-voting-platform/backend/internal/handlers"
 	"github.com/feature-voting-platform/backend/internal/middleware"
 	"github.com/feature-voting-platform/backend/internal/repository"
+	"github.com/feature-voting-platform/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 
 	swaggerFiles "github.com/swaggo/files"
@@ -61,6 +62,7 @@ func main() {
 
 	// Middleware
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.LoggingMiddleware())
 	r.Use(gin.Recovery())
 
 	// Health check
@@ -111,6 +113,9 @@ func main() {
 	// Swagger documentation
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// Test our custom logger
+	utils.LogInfo("Testing custom logger on server startup")
+	
 	log.Printf("Starting server on %s:%s", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Swagger documentation available at: http://%s:%s/swagger/index.html", cfg.Server.Host, cfg.Server.Port)
 	

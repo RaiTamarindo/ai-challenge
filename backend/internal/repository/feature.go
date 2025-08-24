@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/feature-voting-platform/backend/internal/models"
 )
@@ -145,7 +146,7 @@ func (r *FeatureRepository) Update(id int, title, description *string) error {
 	}
 	
 	query := fmt.Sprintf("UPDATE features SET %s WHERE id = $%d", 
-		fmt.Sprintf("%s", setParts), argCount)
+		strings.Join(setParts, ", "), argCount)
 	args = append(args, id)
 	
 	result, err := r.db.Exec(query, args...)

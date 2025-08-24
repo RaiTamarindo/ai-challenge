@@ -1,0 +1,1 @@
+Please update the handlers so it logs all errors that might occur. Also add info and verbose logs with JSON metadata: featureID, userID, voteCount, stackTrace, etc
