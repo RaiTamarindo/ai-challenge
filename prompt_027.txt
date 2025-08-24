@@ -1,0 +1,11 @@
+USER PROMPT 027:
+Date: 2025-08-24
+Request: The app is crashing when I get logged in. Here is the error log I got: FATAL EXCEPTION: main
+Process: com.featurevoting, PID: 7869
+java.lang.RuntimeException: Unable to start activity ComponentInfo{com.featurevoting/com.featurevoting.activities.MainActivity}: java.lang.IllegalStateException: This Activity already has an action bar supplied by the window decor. Do not request Window.FEATURE_SUPPORT_ACTION_BAR and set windowActionBar to false in your theme to use a Toolbar instead.
+
+CONTEXT: After fixing API routes, login works but app crashes when transitioning to MainActivity due to ActionBar/Toolbar conflict
+
+RESOLUTION NEEDED: Fix theme configuration to properly handle Toolbar setup - either disable window action bar or remove custom toolbar setup
+
+STATUS: Need to fix ActionBar/Toolbar theme conflict in MainActivity

@@ -1,0 +1,18 @@
+USER PROMPT 019:
+Date: 2025-08-24
+Request: I'm facing two issues in the Android Studio UI: 1) there is no AVD Manager option in the tools menu and I can't find it anywhere. There is a Device Manager option, is that renamed from AVD? 2) The UI should an error in the gradle file: A problem occurred evaluating root project 'FeatureVotingPlatform'.
+> Build was configured to prefer settings repositories over project repositories but repository 'Google' was added by build file 'build.gradle'
+
+CONTEXT: User is setting up Android Studio and encountering common issues with newer versions
+
+RESOLUTION:
+1. Confirmed AVD Manager was renamed to "Device Manager" in newer Android Studio versions
+2. Fixed Gradle repository configuration error by removing conflicting allprojects repositories from root build.gradle
+3. Updated SETUP.md to use correct "Device Manager" terminology
+4. Instructed user to sync project to resolve remaining issues
+
+FILES MODIFIED:
+- /Users/raitamarindo/Repos/MetaCTO/AIChallenge/android/build.gradle (removed allprojects repositories)
+- /Users/raitamarindo/Repos/MetaCTO/AIChallenge/android/SETUP.md (updated AVD Manager → Device Manager references)
+
+STATUS: Android Studio setup issues resolved, project should now sync successfully

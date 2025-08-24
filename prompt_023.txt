@@ -1,0 +1,12 @@
+USER PROMPT 023:
+Date: 2025-08-24
+Request: When I try to run, on building stage, it is returning several errors like this one: AAPT: error: <adaptive-icon> elements require a sdk version of at least 26. And at the end there is a message like: Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0. It seems you are using deprecated features, could you try to upgrade that? FYI I upgraded the Android Gradle Plugin to the 8.12.1 version.
+
+CONTEXT: User upgraded Android Gradle Plugin to 8.12.1, but encountering adaptive icon SDK version errors and deprecated Gradle features warnings
+
+RESOLUTION NEEDED:
+1. Fix adaptive icon compatibility by creating fallback bitmap icons for API < 26
+2. Update build configuration to remove deprecated Gradle features
+3. Ensure compatibility with newer Gradle/AGP versions
+
+STATUS: Need to fix icon compatibility and modernize build configuration

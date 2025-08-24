@@ -1,0 +1,9 @@
+USER PROMPT 026:
+Date: 2025-08-24
+Request: Cool its working but it seems the app is missing the /api/v1 route prefix on all requests to the API, could you review the android app and fix it please?
+
+CONTEXT: Android app is running but API calls are failing because they're missing the /api/v1 prefix that the backend uses
+
+RESOLUTION NEEDED: Update ApiClient.kt and ApiService.kt to include proper /api/v1 base URL prefix
+
+STATUS: Need to fix API endpoint configuration to match backend routes

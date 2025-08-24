@@ -1,0 +1,9 @@
+USER PROMPT 025:
+Date: 2025-08-24
+Request: Do you think I could put anything into the .gitignore file? Because right now there are more than 500 files to be commited in the git repository, but I don't believe all of them actually needs to be versioned.
+
+CONTEXT: User noticed that Android project has generated many files that shouldn't be versioned, needs proper .gitignore
+
+RESOLUTION: Create comprehensive .gitignore file for Android project to exclude build outputs, caches, IDE files, etc.
+
+STATUS: Need to create .gitignore file with standard Android exclusions

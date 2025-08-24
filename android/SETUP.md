@@ -21,9 +21,9 @@ This guide will help you set up Android Studio and test the Feature Voting Andro
 
 ## Step 2: Create Android Virtual Device (Emulator)
 
-1. **Open AVD Manager**
-   - In Android Studio welcome screen, click "More Actions" → "AVD Manager"
-   - Or use menu: Tools → AVD Manager
+1. **Open Device Manager**
+   - In Android Studio welcome screen, click "More Actions" → "Device Manager"
+   - Or use menu: Tools → Device Manager
 
 2. **Create Virtual Device**
    - Click "Create Virtual Device"
@@ -54,7 +54,7 @@ This guide will help you set up Android Studio and test the Feature Voting Andro
    - You'll see "Sync successful" in the status bar when done
 
 3. **Start the Emulator**
-   - Click the AVD Manager icon in the toolbar
+   - Click the Device Manager icon in the toolbar
    - Click the "Play" button next to your "Pixel_7_API_34" device
    - Wait for the emulator to boot up (2-3 minutes first time)
 
